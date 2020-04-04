@@ -5,7 +5,9 @@
  */
 package com.udea.servlet;
 
+import com.udea.ejb.PerfilUsuarioFacadeLocal;
 import com.udea.ejb.UsuariosFacadeLocal;
+import com.udea.entity.PerfilUsuario;
 import com.udea.entity.Usuarios;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,6 +22,9 @@ import javax.servlet.http.HttpServletResponse;
  * @author FRANKLIN
  */
 public class UsuarioServlet extends HttpServlet {
+
+    @EJB
+    private PerfilUsuarioFacadeLocal perfilUsuarioFacade;
 
     @EJB
     private UsuariosFacadeLocal usuariosFacade;
@@ -38,20 +43,29 @@ public class UsuarioServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
           String action = request.getParameter("action");
+          String url="index.html";
             if (action.equals("registrar")) {
+                url="login.jsp";
+                PerfilUsuario pu= new PerfilUsuario();
+                pu.setNombre(request.getParameter("nombre"));
+                perfilUsuarioFacade.create(pu);
                Usuarios u = new Usuarios();
                u=(Usuarios) request.getAttribute("usuario");
-                    usuariosFacade.create(u);
+               u.setIdPerfil(pu);
+               usuariosFacade.create(u);
             }else if (action.equals("login")) {
                 String us;
                 String pass;
                 us=request.getParameter("us");
                 pass=request.getParameter("pass");
                 if (usuariosFacade.checkLogin(us, pass)) {
+                    url="index.html";
                 }else{
-                    
-                }
+                    url="login.jsp?error=1";
+                } 
             }
+            response.sendRedirect(url);
+            out.close();
         }
     }
 
